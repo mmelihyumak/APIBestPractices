@@ -1,0 +1,50 @@
+{
+    "swagger": "1.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/api/brand/{id}": {
+            "post": {
+                "description": "Bu endpoint yeni bir marka ekler",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Marka ekle",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Item ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.BrandResponseModel"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handlers.BrandResponseModel": {
+            "type": "object",
+            "properties": {
+                "Message": {
+                    "type": "string"
+                },
+                "isSuccess": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}
