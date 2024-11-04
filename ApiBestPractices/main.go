@@ -2,12 +2,12 @@ package main
 
 import (
 	_ "github.com/lib/pq"
-	"goapibestpractices/models"
-    "goapibestpractices/cache"
-    "goapibestpractices/services"
+	"goapibestpractices/services"
+	"goapibestpractices/database"
+	"goapibestpractices/repository"
+	"goapibestpractices/cache"
 	"log"
 	"net/http"
-	"fmt"
 )
 
 var portNumber string = ":8080"
@@ -15,26 +15,21 @@ var portNumber string = ":8080"
 func main() {
 	var err error
 
-	models.DB, err = models.ConnectDb()
-	if err != nil {
-		log.Fatalf("Veritabanı bağlantısı başarısız oldu %s", err)
-	}
-
-	redisClient := cache.GetRedisClient()
-    redisCache := cache.NewRedisCache(redisClient)
-
-	userService := services.NewUserService(redisCache)
-
-    // Kullanıcı verisini cache üzerinden getirme
-    userData, err := userService.GetUser("userID123")
+	db, err := database.InitDB("postgres://localhost:5432/bookings?sslmode=disable")
     if err != nil {
-        panic(err)
+        log.Fatalf("Veritabanı bağlantısı başarısız oldu: %s", err)
     }
-    fmt.Println("User Data:", userData)
+    defer db.Close()
 
+	redisCache := cache.NewRedisCache("localhost:6379", "", 0)
+
+	userRepo := repository.NewUserRepository(db)
+	userService := services.NewUserService(userRepo, redisCache)
+
+	// HTTP sunucusunu başlat
 	srv := &http.Server{
-		Addr: portNumber,
-		Handler: routes(),
+		Addr:    portNumber,
+		Handler: routes(userService), // routes fonksiyonuna userService'i parametre olarak geçin
 	}
 
 	log.Println("Starting server on :8080...")
